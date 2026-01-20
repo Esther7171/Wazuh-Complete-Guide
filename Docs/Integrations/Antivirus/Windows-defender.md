@@ -1,72 +1,24 @@
-## 🛡️ Integrate Wazuh with Microsoft Defender Logs (Windows)  
+# Integrating Wazuh with Microsoft Defender Logs on Windows
 
-#### Steps to Configure Wazuh  
+You just finished setting up Wazuh and the first thing you want is visibility. Makes sense. Before installing agents everywhere, it’s smart to wire up Microsoft Defender logs so every Windows machine reports what Defender is actually seeing.
 
-1. **Access the Wazuh Dashboard**  
-   - Open the Wazuh Dashboard.  
-   - Click on the menu icon (☰) in the top-left corner.  
+So how do we do this cleanly and in a way that scales for future agents?
 
-<div align="center">
-<img src="https://github.com/user-attachments/assets/b321077b-bc37-4c2a-9008-42203f2a5809" height="400"></img>
-</div>
+This guide walks through all working paths. Default agent config, group based config, and the manual fallback when nothing else pushes.
 
 ---
 
-2. **Navigate to the Agent Group**  
-   - Search for "Group" in the menu.  
-   - Click the **Edit** (pencil) icon for the desired agent group.
+## Default Agent Configuration (Best Practice Before Installing Agents)
 
-<div align="center">
-<img src="https://github.com/user-attachments/assets/eb1c4361-ad03-400a-b899-a782d7a2c3de" height=""></img>
-</div>
+If you haven’t deployed any agents yet, this is the cleanest move. Anything you define here will automatically apply to all future agents.
 
----
-
-3. **Modify the `agent.conf` File**  
-
-   
-<div align="center">
-<img src="https://github.com/user-attachments/assets/cbb310fd-445a-4970-b385-45d1b3408a32" height=""></img>
-</div>
-
-* Add the following rule to the `agent.conf` file via the Wazuh Dashboard:  
-
-```xml
-   <localfile>
-     <location>Microsoft-Windows-Windows Defender/Operational</location>
-     <log_format>eventchannel</log_format>
-   </localfile>
-```
----
-
-4. **Save and Apply the Changes**  
-   - Save the configuration and restart the Wazuh agent if necessary.  
-
-<div align="center">
-<img src="https://github.com/user-attachments/assets/d48aba16-881e-4687-a6c5-cf9805c98b59" height=""></img>
-</div>
-
-
-## 📦 Agent.conf
-
-#### 📝 Step 1: Open the Wazuh Agent Configuration File
-
-The Wazuh agent uses a config file to know **what logs to collect**. We need to edit that file and tell it to watch the Microsoft Defender logs.
-
-#### ✅ Do this:
-
-**1. Open the terminal as an administrator, then paste this command to open the Wazuh agent configuration file:**
+Log in to your Wazuh server and open the default agent configuration file.
 
 ```
-notepad.exe "C:\Program Files (x86)\ossec-agent\ossec.conf"
+nano /var/ossec/etc/shared/default/agent.conf
 ```
-> This opens the Wazuh agent’s config file in Notepad. You might need admin permission. If it asks, click **Yes**.
 
----
-
-#### 🧩 Step 2: Add the Microsoft Defender Log Source
-
-Scroll down and **paste** this code **before the last `</ossec_config>` line**:
+Add the Defender event channel configuration below.
 
 ```xml
 <localfile>
@@ -75,27 +27,142 @@ Scroll down and **paste** this code **before the last `</ossec_config>` line**:
 </localfile>
 ```
 
-### 🧐 What does this mean?
+Save the file. That’s it.
 
-* `<localfile>` = You're telling Wazuh to look at a new log file.
-* `<location>` = This is where Defender stores its events in Windows (inside the Event Viewer).
-* `<log_format>` = "eventchannel" tells Wazuh it's reading Windows Event Logs.
+Every new Windows agent you install from now on will start shipping Defender logs without touching the endpoint again. This is how it should be done when building fresh.
 
 ---
 
-## 🔁 Step 3: Restart the Wazuh Agent
+## Applying Defender Logs Using Agent Groups (Already Installed Agents)
 
-Now Wazuh knows where to look. You just need to restart it so it starts reading the Defender logs.
+Already deployed agents and using groups? No problem. You can push the same configuration from the Wazuh Dashboard.
 
-### ✅ How to restart:
+### Step 1: Open the Wazuh Dashboard
+
+Open the dashboard and click the menu icon in the top left corner.
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/b321077b-bc37-4c2a-9008-42203f2a5809" height="400"></img>
+</div>
+
+---
+
+### Step 2: Go to Agent Groups
+
+Search for Group in the menu and open it.
+Choose the group you want and click the edit icon.
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/eb1c4361-ad03-400a-b899-a782d7a2c3de"></img>
+</div>
+
+---
+
+### Step 3: Edit agent.conf for the Group
+
+Open the agent.conf editor for the group.
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/cbb310fd-445a-4970-b385-45d1b3408a32"></img>
+</div>
+
+Paste the Defender configuration.
+
+```xml
+<localfile>
+  <location>Microsoft-Windows-Windows Defender/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+```
+
+Save the changes.
+
+---
+
+### Step 4: Apply and Sync
+
+Once saved, the configuration will sync automatically. In most cases, agents pick this up without restart. If logs do not appear immediately, restarting the agent helps.
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/d48aba16-881e-4687-a6c5-cf9805c98b59"></img>
+</div>
+
+---
+
+## Manual Setup (Old Agents Not Receiving Group Updates)
+
+Sometimes agents are old. Sometimes they drift. Sometimes group sync just refuses to cooperate.
+
+If the Defender logs are still missing, this manual method always works.
+
+---
+
+## Step 1: Open the Wazuh Agent Config on Windows
+
+Open an elevated terminal or Run dialog and launch Notepad as administrator.
+
+```
+notepad.exe "C:\Program Files (x86)\ossec-agent\ossec.conf"
+```
+
+If Windows asks for permission, allow it.
+
+---
+
+## Step 2: Add Defender Event Channel
+
+Scroll near the bottom of the file.
+Paste this block **before** the closing `</ossec_config>` tag.
+
+```xml
+<localfile>
+  <location>Microsoft-Windows-Windows Defender/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+```
+
+### What are we actually telling Wazuh here?
+
+The localfile tag tells the agent to watch a log source.
+The location points to Defender’s Event Viewer channel.
+The eventchannel format tells Wazuh this is a Windows event log, not a flat file.
+
+Simple, but powerful.
+
+---
+
+## Step 3: Restart the Wazuh Agent
+
+Configuration changes do nothing until the agent reloads.
+
+Restart it using PowerShell.
 
 ```ps1
 Restart-Service -Name wazuh
 ```
+
+Within seconds, Defender events should start flowing to the manager.
+
 ---
 
-## 📚 More Info
+## Verifying Defender Logs
 
-* Wazuh [documentation](https://wazuh.com/blog/detecting-powershell-exploitation-techniques-in-windows-using-wazuh/)
+If you want to double check the log source manually, open Event Viewer and navigate to:
 
-* Defender Logs Path: `Event Viewer > Applications and Services Logs > Microsoft > Windows > Windows Defender > Operational`
+```
+Applications and Services Logs
+Microsoft
+Windows
+Windows Defender
+Operational
+```
+
+If events exist there and the agent is running, Wazuh will ingest them.
+
+---
+
+## Additional References
+
+Official Wazuh blog on Windows detection
+[https://wazuh.com/blog/detecting-powershell-exploitation-techniques-in-windows-using-wazuh/](https://wazuh.com/blog/detecting-powershell-exploitation-techniques-in-windows-using-wazuh/)
+
