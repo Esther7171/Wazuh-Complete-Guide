@@ -31,6 +31,7 @@ Add the Defender event channel configuration below.
 </div>
 
 
+
 Save the file. That’s it.
 
 Every new Windows agent you install from now on will start shipping Defender logs without touching the endpoint again. This is how it should be done when building fresh.
