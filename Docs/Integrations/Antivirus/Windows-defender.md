@@ -26,6 +26,10 @@ Add the Defender event channel configuration below.
   <log_format>eventchannel</log_format>
 </localfile>
 ```
+<div align="center">
+  <img width="840" height="179" alt="image" src="https://github.com/user-attachments/assets/a9588d58-4d77-484a-b8fb-6f9f73cb2fbb" />
+</div>
+
 
 Save the file. That’s it.
 
