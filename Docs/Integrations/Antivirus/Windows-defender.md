@@ -170,4 +170,3 @@ If events exist there and the agent is running, Wazuh will ingest them.
 
 Official Wazuh blog on Windows detection
 [https://wazuh.com/blog/detecting-powershell-exploitation-techniques-in-windows-using-wazuh/](https://wazuh.com/blog/detecting-powershell-exploitation-techniques-in-windows-using-wazuh/)
-
