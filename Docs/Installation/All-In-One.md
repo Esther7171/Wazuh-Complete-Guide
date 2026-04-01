@@ -25,7 +25,7 @@ Set up your deployment configuration, generate SSL certificates, and create secu
 ### Download the Installtion Assitant and Configuration File:
 
 ```bash
-curl -sO https://packages.wazuh.com/4.14/wazuh-certs-tool.sh
+curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh
 curl -sO https://packages.wazuh.com/4.14/config.yml
 ```
 ### Edit `config.yml`:
